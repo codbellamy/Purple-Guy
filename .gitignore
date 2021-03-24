@@ -40,4 +40,7 @@ PixelGame/Debug/
 PixelGame/Release/
 PixelGame/x64/
 PixelGame/.vs/
+
+# VS2019 Files
 PixelGame/*vcxproj*
+PixelGame/PixelGame.sln
