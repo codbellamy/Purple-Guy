@@ -1,6 +1,6 @@
 #define OLC_PGE_APPLICATION
+#include "olcPixelGameEngine.h"
 #include "./PixelGame/Entity.h"
-#include "./PixelGame/Camera.h"
 
 class Game : public olc::PixelGameEngine
 {
@@ -15,10 +15,6 @@ public:
 	{
 		// Load the map sprite
 		mapSprite = new olc::Sprite(mapPath);
-
-		// Relative starting position for the player (this will adjust offsets accordingly)
-		// {0, 0} will place the player at the top left of the map
-		const olc::vf2d startingPos = { float(ScreenWidth()) / 2, float(ScreenHeight()) / 2 };
 
 		// Create the player and load the decal for the player
 		player = new Player(ScreenWidth(), ScreenHeight(), startingPos, 1000.0f);
@@ -79,8 +75,9 @@ public:
 			case Entity::Type::NPC:
 				DrawDecal(e->pos - spriteAdjust + player->cam->getOffsets(), npcDecal);
 				if (debugFlag) {
+					Entity::Boundary b = e->getBoundary();
 					DrawCircle(e->pos + player->cam->getOffsets(), e->r, olc::BLUE);
-					DrawRect(olc::vf2d({ e->b.xLower - e->r, e->b.yLower - e->r}) + player->cam->getOffsets(), olc::vf2d({ e->b.xUpper + e->r, e->b.yUpper  + e->r}), olc::BLUE);
+					DrawRect(olc::vf2d({ b.xLower - e->r, b.yLower - e->r}) + player->cam->getOffsets(), olc::vf2d({ b.xUpper + e->r, b.yUpper  + e->r}), olc::BLUE);
 				}
 				break;
 
@@ -97,9 +94,10 @@ public:
 
 		// Debug information
 		if (debugFlag) {
+			Entity::Boundary b = player->getBoundary();
 			DrawLine(player->pos, olc::vf2d({ float(ScreenWidth()) / 2, float(ScreenHeight()) / 2 }), olc::RED);
 			DrawCircle(player->pos, player->r, olc::RED);
-			DrawRect(olc::vf2d({ player->b.xLower, player->b.yLower }), olc::vf2d({ player->b.xUpper - player->b.xLower, player->b.yUpper - player->b.yLower }), olc::RED);
+			DrawRect(olc::vf2d({ b.xLower, b.yLower }), olc::vf2d({ b.xUpper - b.xLower, b.yUpper - b.yLower }), olc::RED);
 			DrawCircle(olc::vf2d({ float(ScreenWidth()) / 2, float(ScreenHeight()) / 2 }), 7, olc::RED);
 		}
 	}
@@ -127,6 +125,10 @@ private:
 	// Constants
 	const float spriteSize = 16.0f;
 	const olc::vf2d spriteAdjust = { float(spriteSize) / 2, float(spriteSize) / 2 };
+
+	// Relative starting position for the player (this will adjust offsets accordingly)
+	// {0, 0} will place the player at the top left of the map
+	const olc::vf2d startingPos = { float(ScreenWidth()) / 2, float(ScreenHeight()) / 2 };
 };
 
 struct AspectRatio
