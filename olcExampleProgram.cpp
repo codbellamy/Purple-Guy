@@ -73,7 +73,11 @@ public:
 			switch (e->getType()) {
 
 			case Entity::Type::NPC:
+				
+				// Draw the NPC with the npcDecal
 				DrawDecal(e->pos - spriteAdjust + player->cam->getOffsets(), npcDecal);
+
+				// Debug visuals (boundaries and entity radius)
 				if (debugFlag) {
 					Entity::Boundary b = e->getBoundary();
 					DrawCircle(e->pos + player->cam->getOffsets(), e->r, olc::BLUE);
@@ -82,6 +86,7 @@ public:
 				break;
 
 			default:
+				// Whoops
 				std::cout << "No Entity::Type handler for type:" << e->getType() << std::endl;
 				break;
 			}
@@ -90,9 +95,11 @@ public:
 		// Draw Player
 		olc::vf2d adjust = player->pos - olc::vf2d({ float(spriteSize) / 2, float(spriteSize) / 2 });
 		DrawDecal(adjust, charDecal);
+
+		// Reset pixel mode since drawing with alpha is computationally heavy
 		SetPixelMode(olc::Pixel::NORMAL);
 
-		// Debug information
+		// Debug information (camera, player hitbox, bounds, etc.)
 		if (debugFlag) {
 			Entity::Boundary b = player->getBoundary();
 			DrawLine(player->pos, olc::vf2d({ float(ScreenWidth()) / 2, float(ScreenHeight()) / 2 }), olc::RED);
@@ -104,7 +111,6 @@ public:
 
 private:
 
-	Camera* cam;					// Camera
 	Player* player;					// Player
 	std::vector<Entity*> entities;	// Vector to hold all aditional entities
 
@@ -113,6 +119,7 @@ private:
 	std::string		mapPath		= "./Assets/images/sprites/TestMap.png";
 	std::string		npcPath		= "./Assets/images/sprites/NPC.png";
 
+	// Look behind the curtain
 	bool debugFlag = false;
 
 	// Sprite and decal loaders
