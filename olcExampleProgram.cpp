@@ -1,6 +1,7 @@
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
 #include "./PixelGame/Entity.h"
+#include "./PixelGame/Camera.h"
 
 class Game : public olc::PixelGameEngine
 {
@@ -30,9 +31,13 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
+		// Get the camera offsets
+		olc::vf2d cameraOffsets = player->getCamera()->getOffsets();
+
 		// Get mouse position for creating new npcs (on click)
 		olc::vf2d mouse = { float(GetMouseX()), float(GetMouseY()) };
-		mouse -= player->cam->getOffsets();
+		mouse -= cameraOffsets;
+
 
 		// Clear previous frame
 		Clear(olc::BLACK);
@@ -51,19 +56,22 @@ public:
 		player->updatePosition(fElapsedTime);
 
 		// Draw map to the screen
-		DrawSprite(player->cam->getOffsets(), mapSprite);
+		DrawSprite(cameraOffsets, mapSprite);
 
 		// Update NPC positions and render
 		SetPixelMode(olc::Pixel::ALPHA);
 		for (Entity* e : entities) {
 
+			// Get the entity's position
+			olc::vf2d pos = e->getPos();
+
 			// Check for collision with player
-			player->elasticCollision(e, player->cam);
+			player->elasticCollision(e, cameraOffsets);
 			
 			// Check for collision with other entities
 			for (Entity* other : entities) {
 				if (other == e) continue;
-				else e->elasticCollision(other, player->cam);
+				else e->elasticCollision(other, cameraOffsets);
 			}
 			
 			// Update entity's position
@@ -73,15 +81,16 @@ public:
 			switch (e->getType()) {
 
 			case Entity::Type::NPC:
+
 				
 				// Draw the NPC with the npcDecal
-				DrawDecal(e->pos - spriteAdjust + player->cam->getOffsets(), npcDecal);
+				DrawDecal(pos - spriteAdjust + cameraOffsets, npcDecal);
 
 				// Debug visuals (boundaries and entity radius)
 				if (debugFlag) {
 					Entity::Boundary b = e->getBoundary();
-					DrawCircle(e->pos + player->cam->getOffsets(), e->r, olc::BLUE);
-					DrawRect(olc::vf2d({ b.xLower - e->r, b.yLower - e->r}) + player->cam->getOffsets(), olc::vf2d({ b.xUpper + e->r, b.yUpper  + e->r}), olc::BLUE);
+					DrawCircle(pos + cameraOffsets, e->r, olc::BLUE);
+					DrawRect(olc::vf2d({ b.xLower - e->r, b.yLower - e->r}) + cameraOffsets, olc::vf2d({ b.xUpper + e->r, b.yUpper  + e->r}), olc::BLUE);
 				}
 				break;
 
@@ -93,7 +102,8 @@ public:
 		}
 
 		// Draw Player
-		olc::vf2d adjust = player->pos - olc::vf2d({ float(spriteSize) / 2, float(spriteSize) / 2 });
+		olc::vf2d pos = player->getPos();
+		olc::vf2d adjust = pos - olc::vf2d({ float(spriteSize) / 2, float(spriteSize) / 2 });
 		DrawDecal(adjust, charDecal);
 
 		// Reset pixel mode since drawing with alpha is computationally heavy
@@ -102,8 +112,8 @@ public:
 		// Debug information (camera, player hitbox, bounds, etc.)
 		if (debugFlag) {
 			Entity::Boundary b = player->getBoundary();
-			DrawLine(player->pos, olc::vf2d({ float(ScreenWidth()) / 2, float(ScreenHeight()) / 2 }), olc::RED);
-			DrawCircle(player->pos, player->r, olc::RED);
+			DrawLine(pos, olc::vf2d({ float(ScreenWidth()) / 2, float(ScreenHeight()) / 2 }), olc::RED);
+			DrawCircle(pos, player->r, olc::RED);
 			DrawRect(olc::vf2d({ b.xLower, b.yLower }), olc::vf2d({ b.xUpper - b.xLower, b.yUpper - b.yLower }), olc::RED);
 			DrawCircle(olc::vf2d({ float(ScreenWidth()) / 2, float(ScreenHeight()) / 2 }), 7, olc::RED);
 		}

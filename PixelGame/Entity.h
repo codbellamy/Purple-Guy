@@ -52,12 +52,14 @@ public:
 		m(100.0f), type(NONE)
 
 	{ 
-		speedCap = 100.0f;
-		speed = 50.0f;
-		dampen = 0.05;
+		this->setPhysics(100.0f, 50.0f, 0.05f);
 	}
 
 public:
+	const float spriteSize = 16;
+	const float r = spriteSize / 2;
+
+private:
 	// Specific behavior (limiters)
 	// Public to allow each child class to manipulate these values directly
 	float speedCap;
@@ -68,10 +70,6 @@ public:
 	olc::vf2d pos;
 	olc::vf2d vel;
 	float m;
-	const float spriteSize = 16;
-	const float r = spriteSize / 2;
-
-private:
 	
 	// General boundaries (use these to set the outer most limits of the entity)
 	Boundary b;
@@ -83,20 +81,40 @@ public:
 	// Getters
 	Boundary getBoundary()	{ return b; }
 	Type getType()			{ return type; }
+	float getSpeed() { return speed; }
+	olc::vf2d getPos() { return pos; }
+	olc::vf2d getVel() { return vel; }
+	float getMass() { return m; }
+
+	// Setters
+	void setSpeed(float newSpeed) { speed = newSpeed; }
+	void setSpeedCap(float newSpeedCap) { speedCap = newSpeedCap; }
+	void setPos(olc::vf2d newPos) { pos = newPos; }
+	void setVel(olc::vf2d newVel) { vel = newVel; }
+	void setMass(float newMass) { m = newMass; }
+	void increasePos(olc::vf2d deltaPos) { pos += deltaPos; }
+	void increaseVel(olc::vf2d deltaVel) { vel += deltaVel; }
+
+	// Change movement characteristics in one go
+	void setPhysics(float newSpeedCap, float newSpeed, float newDampen) {
+		speedCap = newSpeedCap;
+		speed = newSpeed;
+		dampen = newDampen;
+	}
 
 	void updateBoundary(Boundary newBoundary) {
 		b = newBoundary;
 	}
 
 	// Perfectly elastic collision between entities
-	void elasticCollision(Entity* e, Camera* c) {
+	void elasticCollision(Entity* e, olc::vf2d offsets) {
 
 		olc::vf2d posA, posB;
 
 		// Remove offset from entity to determine if there is a collision
 		if (this->getType() == PLAYER) {
 			posA = pos;
-			posB = e->pos + c->getOffsets();
+			posB = e->pos + offsets;
 		}
 		else {	// Entities that are both offset do not need an offset correction (relative)
 			posA = pos;
@@ -127,8 +145,8 @@ public:
 
 				// Remove offsets from both player position and entity position
 				// since everything is relative to an offset origin
-				posA -= c->getOffsets();
-				posB -= c->getOffsets();
+				posA -= offsets;
+				posB -= offsets;
 				e->pos = posA + (((posB - posA) / (posB - posA).mag()) * (r + e->r));
 			}
 			else {
@@ -165,9 +183,6 @@ public:
 			break;
 		}
 	}
-
-	// Allows for directly adding velocity to the entity
-	void increaseVel(olc::vf2d dVel) { vel += dVel; }
 
 	// Handles collision
 	virtual void collision() {
@@ -207,8 +222,6 @@ public:
 class Player : public Entity {
 
 public:
-	// Allow the player to manipulate a camera object
-	Camera* cam;
 
 	enum Move {
 		UP,
@@ -229,6 +242,9 @@ private:
 	// relative to the camera
 	Boundary mapBounds;
 
+	// Allow the player to manipulate a camera object
+	Camera* cam;
+
 public:
 
 	// Width and height are used to find the bounds for the camera.
@@ -243,9 +259,7 @@ public:
 			Type::PLAYER){					// Entity type
 
 		// Movement behavior
-		speedCap = 250.0f;
-		speed = 50.0f;
-		dampen = 0.2f;
+		this->setPhysics(250.0f, 50.0f, 0.2f);
 
 		// Initialize camera and camera settings
 		cam = new Camera(w, h, -iPos);
@@ -265,6 +279,8 @@ public:
 		mapBounds = { 0, float(w), 0, float(h) };
 	}
 
+	Camera* getCamera() { return cam; }
+
 	// Overwrites from parent class since the player can manipulate the camera
 	void updatePosition(float elapsedTime) {
 
@@ -272,7 +288,8 @@ public:
 		this->velDecay();
 		this->speedCheck();
 
-		pos += vel * elapsedTime;	// Update position
+		// Update position
+		this->increasePos(this->getVel() * elapsedTime);
 
 		this->cameraManip();		// Cool camera effects and illusions
 		this->collision();			// Check collision with boundaries
@@ -280,6 +297,8 @@ public:
 
 	// The player is attempting to move the player in a cardinal direction
 	void move(Move m) {
+
+		float speed = this->getSpeed();
 
 		// TODO: use this to set flags on movement for animation
 		switch (m)
@@ -306,6 +325,8 @@ private:
 	// Manipulates the player's position along with the camera to create a smooth camera illusion
 	void cameraManip() {
 
+		olc::vf2d pos = this->getPos();
+
 		// Adjust the camera based on current position
 		cam->smooth(pos);
 
@@ -321,12 +342,14 @@ private:
 
 		// Determine how quickly to adjust the position based on distance from the midpoint
 		if (dist.mag2() > stopRadius) {
-			pos += (dist * accel);
+			this->increasePos(dist * accel);
 		}
 	}
 
 	// Deals with collision with boundaries
 	void collision() {
+
+		olc::vf2d pos = this->getPos();
 
 		// Prevent player from moving too far from the center of the screen
 		Boundary b = this->getBoundary();
@@ -347,6 +370,9 @@ private:
 			pos.y - bounds.y - r < mapBounds.yLower ?
 				pos.y = bounds.y + mapBounds.yLower + r: pos.y = bounds.y + mapBounds.yUpper - r;
 		}
+
+		// Apply position corrections
+		this->setPos(pos);
 	}
 };
 
@@ -363,11 +389,8 @@ public:
 			mass,
 			Type::NPC)
 	{
-
 		// NPC behavior
-		dampen = 0.05f;
-		speedCap = 50.0f;
-		speed = 10.0f;
+		this->setPhysics(50.0f, 10.0f, 0.05f);
 
 		// Map boundaries
 		this->updateBoundary({ r, (float)width - r, r, (float)height - r });
@@ -396,7 +419,8 @@ public:
 		// Randomly decide if the NPC should move
 		this->randMove();
 
-		pos += vel * elapsedTime;	// Update position
+		// Update position
+		this->increasePos(this->getVel() * elapsedTime);
 
 		this->collision();			// Check collision
 	
@@ -438,13 +462,15 @@ private:
 		// As long as the move timer is positive for the axis...
 		if (moveTimerX > 0) {
 
+			
+
 			// Adjust velocity
 			moveTimerX--;
-			positiveX ? vel.x += speed : vel.x -= speed;
+			positiveX ? this->increaseVel({ this->getSpeed(), 0.0f}) : this->increaseVel({ -this->getSpeed(), 0.0f });
 		}
 		if (moveTimerY > 0) {
 			moveTimerY--;
-			positiveY ? vel.y += speed : vel.y -= speed;
+			positiveY ? this->increaseVel({ 0.0f, this->getSpeed() }) : this->increaseVel({ 0.0f, -this->getSpeed() });
 		}
 	}
 };
