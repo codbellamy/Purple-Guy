@@ -144,18 +144,18 @@ public:
 			// Player collisions have an offset that needs to be addressed
 			if (this->getType() == PLAYER) {
 				// Calculate player with offsets since the entities are offset
-				pos = posB + (((posA - posB) / (posA - posB).mag()) * (r + e->r));
+				pos = posB + ((posA - posB).norm() * (r + e->r));
 
 				// Remove offsets from both player position and entity position
 				// since everything is relative to an offset origin
 				posA -= offsets;
 				posB -= offsets;
-				e->pos = posA + (((posB - posA) / (posB - posA).mag()) * (r + e->r));
+				e->pos = posA + ((posB - posA).norm() * (r + e->r));
 			}
 			else {
 				// Entity to entity interactions are all relative anyway
-				pos = posB + (((posA - posB) / (posA - posB).mag()) * (r + e->r));
-				e->pos = posA + (((posB - posA) / (posB - posA).mag()) * (r + e->r));
+				pos = posB + ((posA - posB).norm() * (r + e->r));
+				e->pos = posA + ((posB - posA).norm() * (r + e->r));
 			}
 		}
 	}

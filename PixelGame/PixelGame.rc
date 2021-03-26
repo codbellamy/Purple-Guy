@@ -68,7 +68,7 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "CompanyName", "Fart Boi"
-            VALUE "FileDescription", "Smelly Purple Guy is the guy that you play in this stupid ass game."
+            VALUE "FileDescription", "Smelly Purple Guy is the guy that you play."
             VALUE "FileVersion", "1.0.0.1"
             VALUE "InternalName", "Schlup.exe"
             VALUE "LegalCopyright", "Copyright (C) 2021"

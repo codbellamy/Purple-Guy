@@ -65,6 +65,13 @@ public:
 			// Get the entity's position
 			olc::vf2d pos = e->getPos();
 
+			// Dont render the entity if they are outside the screen boundaries
+			if ((pos + cameraOffsets).x + e->r < 0
+				|| (pos + cameraOffsets).x - e->r > ScreenWidth()
+				|| (pos + cameraOffsets).y + e->r < 0
+				|| (pos + cameraOffsets).y - e->r > ScreenHeight())
+				continue;
+
 			// Check for collision with player
 			player->elasticCollision(e, cameraOffsets);
 			
@@ -103,7 +110,8 @@ public:
 
 		// Draw Player
 		olc::vf2d pos = player->getPos();
-		olc::vf2d adjust = pos - olc::vf2d({ float(spriteSize) / 2, float(spriteSize) / 2 });
+		olc::vf2d spriteSize = { player->r, player->r };
+		olc::vf2d adjust = pos - spriteSize;
 		DrawDecal(adjust, charDecal);
 
 		// Reset pixel mode since drawing with alpha is computationally heavy
