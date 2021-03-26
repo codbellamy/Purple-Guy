@@ -121,6 +121,14 @@ public:
 
 private:
 
+	// Constants
+	const float spriteSize = 16.0f;
+	const olc::vf2d spriteAdjust = { float(spriteSize) / 2, float(spriteSize) / 2 };
+
+	// Relative starting position for the player (this will adjust offsets accordingly)
+	// {0, 0} will not offset anything... (the player will spawn at the normal center)
+	const olc::vf2d startingPos = { 0, 0 };
+
 	Player* player;					// Player
 	std::vector<Entity*> entities;	// Vector to hold all aditional entities
 
@@ -138,14 +146,6 @@ private:
 	olc::Sprite*	mapSprite;
 	olc::Decal*		charDecal;
 	olc::Decal*		npcDecal;
-
-	// Constants
-	const float spriteSize = 16.0f;
-	const olc::vf2d spriteAdjust = { float(spriteSize) / 2, float(spriteSize) / 2 };
-
-	// Relative starting position for the player (this will adjust offsets accordingly)
-	// {0, 0} will place the player at the top left of the map
-	const olc::vf2d startingPos = { float(ScreenWidth()) / 2, float(ScreenHeight()) / 2 };
 };
 
 struct AspectRatio
