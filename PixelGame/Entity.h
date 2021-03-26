@@ -42,7 +42,10 @@ public:
 		vel(iVel),
 		m(mass),
 		type(t)
-	{ }
+	{
+		b = { 0,0,2000,2000 };
+		this->setPhysics(50.0f, 20.0f, 0.05f);
+	}
 
 	// Default constructor (used for testing)
 	Entity() 

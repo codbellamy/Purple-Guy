@@ -7,16 +7,19 @@ class Camera {
 public:
 
 	Camera(int32_t screenWidth, int32_t screenHeight, olc::vf2d iOffset) {
-		// Screen dimensions
+		// Screen dimensions (camera should be aware what the screen size is)
 		screenDim = { float(screenWidth), float(screenHeight) };
 
-		// Camera boundaries
+		// Camera boundaries (used to calculate a box camera and provide the player with a camera boundary)
 		points[0] = { margin * screenWidth, margin * screenHeight };
 		points[1] = { (boxSize + margin) * screenWidth, (boxSize + margin) * screenHeight };
 
-		// Offset of entities that should be print to the screen (based change of position)
-		offset[x] = iOffset.x + (float(screenWidth) / 2);
-		offset[y] = iOffset.y + (float(screenHeight) / 2);
+		// Offset of entities that should be print to the screen (based on change of position)
+		offset[x] = iOffset.x;
+		offset[y] = iOffset.y;
+
+		accel = 1;
+		stopRadius = 7;
 	}
 
 private:
@@ -41,9 +44,9 @@ private:
 public:
 
 	// Adjust the behavior of the camera when it pans
-	void setPanningOptions(int r, float a) {
-		stopRadius = r;
-		accel = a;
+	void setPanningOptions(int radius, float acceleration) {
+		stopRadius = radius;
+		accel = acceleration;
 	}
 
 	// Reterns the boundary point
