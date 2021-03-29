@@ -110,7 +110,7 @@ public:
 	}
 
 	// Perfectly elastic collision between entities
-	void elasticCollision(Entity* e, olc::vf2d offsets) {
+	void elasticCollision(std::unique_ptr<Entity> & e, olc::vf2d offsets) {
 
 		olc::vf2d posA, posB;
 
