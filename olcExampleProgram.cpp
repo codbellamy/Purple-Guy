@@ -43,12 +43,19 @@ public:
 		Clear(olc::BLACK);
 
 		// Input
+		// Movement
 		if (GetKey(olc::Key::W).bHeld)			player->move(Player::Move::UP);
 		if (GetKey(olc::Key::S).bHeld)			player->move(Player::Move::DOWN);
 		if (GetKey(olc::Key::A).bHeld)			player->move(Player::Move::LEFT);
 		if (GetKey(olc::Key::D).bHeld)			player->move(Player::Move::RIGHT);
-		if (GetMouse(0).bPressed)				entities.push_back(new NPC(mouse, ScreenWidth(), ScreenHeight()));
-		if (GetMouse(1).bHeld)					entities.push_back(new NPC(mouse, ScreenWidth(), ScreenHeight()));
+
+		// Adding NPCs on click
+		if (GetMouse(0).bPressed)
+			entities.push_back(std::make_unique<NPC>(mouse, ScreenWidth(), ScreenHeight()));
+		if (GetMouse(1).bHeld)
+			entities.push_back(std::make_unique<NPC>(mouse, ScreenWidth(), ScreenHeight()));
+
+		// Debug and exit
 		if (GetKey(olc::Key::F5).bPressed)		debugFlag = !debugFlag;
 		if (GetKey(olc::ESCAPE).bHeld)			exit(0);
 
@@ -60,16 +67,23 @@ public:
 
 		// Update NPC positions and render
 		SetPixelMode(olc::Pixel::ALPHA);
-		for (Entity* e : entities) {
+		for (auto& e : entities) {
 
 			// Get the entity's position
 			olc::vf2d pos = e->getPos();
+
+			// Dont render the entity if they are outside the screen boundaries
+			if ((pos + cameraOffsets).x + e->r < 0
+				|| (pos + cameraOffsets).x - e->r > ScreenWidth()
+				|| (pos + cameraOffsets).y + e->r < 0
+				|| (pos + cameraOffsets).y - e->r > ScreenHeight())
+				continue;
 
 			// Check for collision with player
 			player->elasticCollision(e, cameraOffsets);
 			
 			// Check for collision with other entities
-			for (Entity* other : entities) {
+			for (auto& other : entities) {
 				if (other == e) continue;
 				else e->elasticCollision(other, cameraOffsets);
 			}
@@ -103,7 +117,8 @@ public:
 
 		// Draw Player
 		olc::vf2d pos = player->getPos();
-		olc::vf2d adjust = pos - olc::vf2d({ float(spriteSize) / 2, float(spriteSize) / 2 });
+		olc::vf2d spriteSize = { player->r, player->r };
+		olc::vf2d adjust = pos - spriteSize;
 		DrawDecal(adjust, charDecal);
 
 		// Reset pixel mode since drawing with alpha is computationally heavy
@@ -129,8 +144,11 @@ private:
 	// {0, 0} will not offset anything... (the player will spawn at the normal center)
 	const olc::vf2d startingPos = { 0, 0 };
 
-	Player* player;					// Player
-	std::vector<Entity*> entities;	// Vector to hold all aditional entities
+	// Player
+	Player* player;
+
+	// Vector to hold all aditional entities
+	std::vector<std::unique_ptr<Entity>> entities;
 
 	// Sprite and image data
 	std::string		charPath	= "./Assets/images/sprites/Character.png";
