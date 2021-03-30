@@ -1,0 +1,29 @@
+{
+    "levels": {
+        "0": {
+            "name" : "TestMap",
+            "player" : {
+                "skin" : "Character",
+                "location" : [0, 0]
+            },
+            "npcs" : [
+                {
+                    "skin" : "NPC",
+                    "location" : [100, 100]
+                },
+                {
+                    "skin" : "NPC",
+                    "location" : [200, 100]
+                },
+                {
+                    "skin" : "NPC",
+                    "location" : [100, 200]
+                },
+                {
+                    "skin" : "NPC",
+                    "location" : [200, 200]
+                }
+            ]
+        }
+    }
+}

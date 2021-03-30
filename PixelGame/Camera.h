@@ -1,6 +1,5 @@
 #pragma once
 #include "../olcPixelGameEngine.h"
-#include "Entity.h"
 
 class Camera {
 
