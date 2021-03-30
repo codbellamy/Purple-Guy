@@ -35,7 +35,7 @@ public:
 	{
 
 		// Get the camera offsets
-		olc::vf2d cameraOffsets = player->getCamera()->getOffsets();
+		cameraOffsets = player->getCamera()->getOffsets();
 
 		// Get mouse position for creating new npcs (on click)
 		olc::vf2d mouse = { float(GetMouseX()), float(GetMouseY()) };
@@ -70,73 +70,15 @@ public:
 
 		// Update NPC positions and render
 		SetPixelMode(olc::Pixel::ALPHA);
-		for (auto& e : entities) {
 
-			// Get the entity's position
-			olc::vf2d pos = e->getPos();
-
-			// Dont render the entity if they are outside the screen boundaries
-			if ((pos + cameraOffsets).x + e->r < 0
-				|| (pos + cameraOffsets).x - e->r > ScreenWidth()
-				|| (pos + cameraOffsets).y + e->r < 0
-				|| (pos + cameraOffsets).y - e->r > ScreenHeight())
-				continue;
-
-			// Check for collision with player
-			player->elasticCollision(e, cameraOffsets);
-			
-			// Check for collision with other entities
-			for (auto& other : entities) {
-				if (other == e) continue;
-				else e->elasticCollision(other, cameraOffsets);
-			}
-			
-			// Update entity's position
-			e->updatePosition(fElapsedTime);
-
-			// Entity specific actions and decal rendering
-			switch (e->getType()) {
-
-			case Entity::Type::NPC:
-
-				
-				// Draw the NPC with the npcDecal
-				DrawDecal(pos - spriteAdjust + cameraOffsets, npcDecal);
-
-				// Debug visuals (boundaries and entity radius)
-				if (debugFlag) {
-					Entity::Boundary b = e->getBoundary();
-					DrawCircle(pos + cameraOffsets, e->r, olc::BLUE);
-					DrawRect(olc::vf2d({ b.xLower - e->r, b.yLower - e->r}) + cameraOffsets, olc::vf2d({ b.xUpper + e->r, b.yUpper  + e->r}), olc::BLUE);
-				}
-				break;
-
-			default:
-				// Whoops
-				std::cout << "No Entity::Type handler for type:" << e->getType() << std::endl;
-				break;
-			}
-		}
+		// Update and render entities
+		this->updateEntities(fElapsedTime);
 
 		// Draw Player
-		olc::vf2d pos = player->getPos();
-		olc::vf2d spriteSize = { player->r, player->r };
-		olc::vf2d adjust = pos - spriteSize;
-		std::pair<olc::vf2d, olc::vf2d> animationData = player->am->getPartialCoords();
-		DrawPartialDecal(adjust, player->am->getDecal(), animationData.first, animationData.second);
-		//DrawDecal(adjust, player->am->getDecal());
+		this->drawPlayer();
 
 		// Reset pixel mode since drawing with alpha is computationally heavy
 		SetPixelMode(olc::Pixel::NORMAL);
-
-		// Debug information (camera, player hitbox, bounds, etc.)
-		if (debugFlag) {
-			Entity::Boundary b = player->getBoundary();
-			DrawLine(pos, olc::vf2d({ float(ScreenWidth()) / 2, float(ScreenHeight()) / 2 }), olc::RED);
-			DrawCircle(pos, player->r, olc::RED);
-			DrawRect(olc::vf2d({ b.xLower, b.yLower }), olc::vf2d({ b.xUpper - b.xLower, b.yUpper - b.yLower }), olc::RED);
-			DrawCircle(olc::vf2d({ float(ScreenWidth()) / 2, float(ScreenHeight()) / 2 }), 7, olc::RED);
-		}
 	}
 
 private:
@@ -144,6 +86,8 @@ private:
 	// Constants
 	const float spriteSize = 16.0f;
 	const olc::vf2d spriteAdjust = { float(spriteSize) / 2, float(spriteSize) / 2 };
+
+	olc::vf2d cameraOffsets;
 
 	// Relative starting position for the player (this will adjust offsets accordingly)
 	// {0, 0} will not offset anything... (the player will spawn at the normal center)
@@ -168,6 +112,81 @@ private:
 
 	// Sprite and decal loaders
 	olc::Sprite*	mapSprite;
+
+private:
+
+	void drawPlayer(){
+		// Get and adjust the position for the sprite
+		olc::vf2d pos = player->getPos();
+		olc::vf2d spriteSize = { player->r, player->r };
+		olc::vf2d adjust = pos - spriteSize;
+
+		// Get animation data for which frame to render
+		std::pair<olc::vf2d, olc::vf2d> animationData = player->am->getPartialCoords();
+
+		// Render the animation from the sprite sheet
+		DrawPartialDecal(adjust, player->am->getDecal(), animationData.first, animationData.second);
+
+		// Debug information (camera, player hitbox, bounds, etc.)
+		if (debugFlag) {
+			Entity::Boundary b = player->getBoundary();
+			DrawLine(pos, olc::vf2d({ float(ScreenWidth()) / 2, float(ScreenHeight()) / 2 }), olc::RED);
+			DrawRect(olc::vf2d({ b.xLower, b.yLower }), olc::vf2d({ b.xUpper - b.xLower, b.yUpper - b.yLower }), olc::RED);
+			DrawCircle(olc::vf2d({ float(ScreenWidth()) / 2, float(ScreenHeight()) / 2 }), 7, olc::RED);
+		}
+	}
+
+	void updateEntities(float fElapsedTime) {
+
+		for (auto& e : entities) {
+
+			// Get the entity's position
+			olc::vf2d pos = e->getPos();
+
+			// Dont render the entity if they are outside the screen boundaries
+			if ((pos + cameraOffsets).x + e->r < 0
+				|| (pos + cameraOffsets).x - e->r > ScreenWidth()
+				|| (pos + cameraOffsets).y + e->r < 0
+				|| (pos + cameraOffsets).y - e->r > ScreenHeight())
+				continue;
+
+			// Check for collision with player
+			player->elasticCollision(e, cameraOffsets);
+
+			// Check for collision with other entities
+			for (auto& other : entities) {
+				if (other == e) continue;
+				else e->elasticCollision(other, cameraOffsets);
+			}
+
+			// Update entity's position
+			e->updatePosition(fElapsedTime);
+
+			// Entity specific actions and decal rendering
+			switch (e->getType()) {
+
+			case Entity::Type::NPC:
+
+
+				// Draw the NPC with the npcDecal
+				DrawDecal(pos - spriteAdjust + cameraOffsets, npcDecal);
+
+				// Debug visuals (boundaries and entity radius)
+				if (debugFlag) {
+					Entity::Boundary b = e->getBoundary();
+					DrawCircle(pos + cameraOffsets, e->r, olc::BLUE);
+					DrawRect(olc::vf2d({ b.xLower - e->r, b.yLower - e->r }) + cameraOffsets, olc::vf2d({ b.xUpper + e->r, b.yUpper + e->r }), olc::BLUE);
+				}
+				break;
+
+			default:
+				// Whoops
+				std::cout << "No Entity::Type handler for type:" << e->getType() << std::endl;
+				break;
+			}
+		}
+	}
+
 };
 
 struct AspectRatio

@@ -54,8 +54,11 @@ public:
 
 	// Choose which animation frame to return
 	void selectAnimation(int animationIndex) {
-		currentAnimation = animationIndex < numberOfAnimations ? animationIndex : 0;
-		currentFrame = 0;
+
+		if (animationIndex != currentAnimation) {
+			currentAnimation = animationIndex < numberOfAnimations ? animationIndex : 0;
+			currentFrame = 0;
+		}
 	}
 
 	// Get the current decal to display
