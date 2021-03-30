@@ -1,6 +1,6 @@
 #include "Entity.h"
 
-NPC::NPC(olc::vf2d pos, int32_t width, int32_t height, float mass = 100.0f)
+NPC::NPC(olc::vf2d pos, int32_t width, int32_t height, float mass)
 	: Entity(	// position, velocity, boundary, mass, type
 		pos,
 		{ 0.0f, 0.0f },

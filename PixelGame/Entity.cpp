@@ -2,18 +2,20 @@
 
 // Preferred constructor to initialize a entity with specific values
 Entity::Entity(olc::vf2d iPos, olc::vf2d iVel, Boundary b, float mass, Type t)
-	: pos(iPos), vel(iVel), b(b), m(mass), type(t) { }
+	: pos(iPos),
+	vel(iVel),
+	b(b),
+	m(mass),
+	type(t)
+{ }
 
-// Used when initializing a player
+// Unknown boundaries (at the moment)
 Entity::Entity(olc::vf2d iPos, olc::vf2d iVel, float mass, Type t)
 	: pos(iPos),
 	vel(iVel),
 	m(mass),
 	type(t)
-{
-	b = { 0,0,2000,2000 };
-	this->setPhysics(50.0f, 20.0f, 0.05f);
-}
+{ }
 
 // Default constructor (used for testing)
 Entity::Entity()
@@ -24,6 +26,13 @@ Entity::Entity()
 
 {
 	this->setPhysics(100.0f, 50.0f, 0.05f);
+}
+
+// Destructor
+Entity::~Entity()
+{
+	// Release memory for the animation manager
+	delete am;
 }
 
 // Getters
@@ -49,6 +58,7 @@ void Entity::setPhysics(float newSpeedCap, float newSpeed, float newDampen) {
 	dampen = newDampen;
 }
 
+// Public functions
 void Entity::elasticCollision(std::unique_ptr<Entity>& e, olc::vf2d offsets) {
 
 	olc::vf2d posA, posB;
@@ -110,6 +120,10 @@ void Entity::bounce(int a) {
 	default:
 		break;
 	}
+}
+void Entity::initAnimations(std::vector<int> animationCounts, int framesPerAnimation, std::string file)
+{
+	am = new AnimationManager(animationCounts, framesPerAnimation, file);
 }
 
 // Virtual functions that will likely need to be overwritten for child classes

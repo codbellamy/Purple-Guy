@@ -3,6 +3,10 @@
 #include "./PixelGame/Entity.h"
 #include "./PixelGame/Camera.h"
 
+void setLevel(int& levelSelector, int newLevel) {
+	levelSelector = newLevel;
+}
+
 class Game : public olc::PixelGameEngine
 {
 public:
@@ -19,10 +23,8 @@ public:
 
 		// Create the player and load the decal for the player
 		player = new Player(ScreenWidth(), ScreenHeight(), startingPos, 1000.0f);
-		charSprite = new olc::Sprite(charPath);
-		charDecal = new olc::Decal(charSprite);
+		player->initAnimations({ 5 }, 10, charPath);
 
-		// Load the npc decal
 		npcSprite = new olc::Sprite(npcPath);
 		npcDecal = new olc::Decal(npcSprite);
 
@@ -31,8 +33,9 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
+
 		// Get the camera offsets
-		olc::vf2d cameraOffsets = player->getCamera()->getOffsets();
+		cameraOffsets = player->getCamera()->getOffsets();
 
 		// Get mouse position for creating new npcs (on click)
 		olc::vf2d mouse = { float(GetMouseX()), float(GetMouseY()) };
@@ -67,6 +70,74 @@ public:
 
 		// Update NPC positions and render
 		SetPixelMode(olc::Pixel::ALPHA);
+
+		// Update and render entities
+		this->updateEntities(fElapsedTime);
+
+		// Draw Player
+		this->drawPlayer();
+
+		// Reset pixel mode since drawing with alpha is computationally heavy
+		SetPixelMode(olc::Pixel::NORMAL);
+	}
+
+private:
+
+	// Constants
+	const float spriteSize = 16.0f;
+	const olc::vf2d spriteAdjust = { float(spriteSize) / 2, float(spriteSize) / 2 };
+
+	olc::vf2d cameraOffsets;
+
+	// Relative starting position for the player (this will adjust offsets accordingly)
+	// {0, 0} will not offset anything... (the player will spawn at the normal center)
+	const olc::vf2d startingPos = { 0, 0 };
+
+	// Player
+	Player* player;
+
+	// Vector to hold all aditional entities
+	std::vector<std::unique_ptr<Entity>> entities;
+
+	// Sprite and image data
+	std::string		charPath	= "./Assets/images/sprites/Test.png";
+	std::string		mapPath		= "./Assets/images/sprites/TestMap.png";
+	std::string		npcPath		= "./Assets/images/sprites/NPC.png";
+	
+	olc::Sprite* npcSprite;
+	olc::Decal* npcDecal;
+
+	// Look behind the curtain
+	bool debugFlag = false;
+
+	// Sprite and decal loaders
+	olc::Sprite*	mapSprite;
+
+private:
+
+	void drawPlayer(){
+		// Get and adjust the position for the sprite
+		olc::vf2d pos = player->getPos();
+		olc::vf2d spriteSize = { player->r, player->r };
+		olc::vf2d adjust = pos - spriteSize;
+
+		// Get animation data for which frame to render
+		std::pair<olc::vf2d, olc::vf2d> animationData = player->am->getPartialCoords();
+
+		// Render the animation from the sprite sheet
+		DrawPartialDecal(adjust, player->am->getDecal(), animationData.first, animationData.second);
+
+		// Debug information (camera, player hitbox, bounds, etc.)
+		if (debugFlag) {
+			Entity::Boundary b = player->getBoundary();
+			DrawLine(pos, olc::vf2d({ float(ScreenWidth()) / 2, float(ScreenHeight()) / 2 }), olc::RED);
+			DrawRect(olc::vf2d({ b.xLower, b.yLower }), olc::vf2d({ b.xUpper - b.xLower, b.yUpper - b.yLower }), olc::RED);
+			DrawCircle(olc::vf2d({ float(ScreenWidth()) / 2, float(ScreenHeight()) / 2 }), 7, olc::RED);
+		}
+	}
+
+	void updateEntities(float fElapsedTime) {
+
 		for (auto& e : entities) {
 
 			// Get the entity's position
@@ -81,13 +152,13 @@ public:
 
 			// Check for collision with player
 			player->elasticCollision(e, cameraOffsets);
-			
+
 			// Check for collision with other entities
 			for (auto& other : entities) {
 				if (other == e) continue;
 				else e->elasticCollision(other, cameraOffsets);
 			}
-			
+
 			// Update entity's position
 			e->updatePosition(fElapsedTime);
 
@@ -96,7 +167,7 @@ public:
 
 			case Entity::Type::NPC:
 
-				
+
 				// Draw the NPC with the npcDecal
 				DrawDecal(pos - spriteAdjust + cameraOffsets, npcDecal);
 
@@ -104,7 +175,7 @@ public:
 				if (debugFlag) {
 					Entity::Boundary b = e->getBoundary();
 					DrawCircle(pos + cameraOffsets, e->r, olc::BLUE);
-					DrawRect(olc::vf2d({ b.xLower - e->r, b.yLower - e->r}) + cameraOffsets, olc::vf2d({ b.xUpper + e->r, b.yUpper  + e->r}), olc::BLUE);
+					DrawRect(olc::vf2d({ b.xLower - e->r, b.yLower - e->r }) + cameraOffsets, olc::vf2d({ b.xUpper + e->r, b.yUpper + e->r }), olc::BLUE);
 				}
 				break;
 
@@ -114,56 +185,8 @@ public:
 				break;
 			}
 		}
-
-		// Draw Player
-		olc::vf2d pos = player->getPos();
-		olc::vf2d spriteSize = { player->r, player->r };
-		olc::vf2d adjust = pos - spriteSize;
-		DrawDecal(adjust, charDecal);
-
-		// Reset pixel mode since drawing with alpha is computationally heavy
-		SetPixelMode(olc::Pixel::NORMAL);
-
-		// Debug information (camera, player hitbox, bounds, etc.)
-		if (debugFlag) {
-			Entity::Boundary b = player->getBoundary();
-			DrawLine(pos, olc::vf2d({ float(ScreenWidth()) / 2, float(ScreenHeight()) / 2 }), olc::RED);
-			DrawCircle(pos, player->r, olc::RED);
-			DrawRect(olc::vf2d({ b.xLower, b.yLower }), olc::vf2d({ b.xUpper - b.xLower, b.yUpper - b.yLower }), olc::RED);
-			DrawCircle(olc::vf2d({ float(ScreenWidth()) / 2, float(ScreenHeight()) / 2 }), 7, olc::RED);
-		}
 	}
 
-private:
-
-	// Constants
-	const float spriteSize = 16.0f;
-	const olc::vf2d spriteAdjust = { float(spriteSize) / 2, float(spriteSize) / 2 };
-
-	// Relative starting position for the player (this will adjust offsets accordingly)
-	// {0, 0} will not offset anything... (the player will spawn at the normal center)
-	const olc::vf2d startingPos = { 0, 0 };
-
-	// Player
-	Player* player;
-
-	// Vector to hold all aditional entities
-	std::vector<std::unique_ptr<Entity>> entities;
-
-	// Sprite and image data
-	std::string		charPath	= "./Assets/images/sprites/Character.png";
-	std::string		mapPath		= "./Assets/images/sprites/TestMap.png";
-	std::string		npcPath		= "./Assets/images/sprites/NPC.png";
-
-	// Look behind the curtain
-	bool debugFlag = false;
-
-	// Sprite and decal loaders
-	olc::Sprite*	charSprite;
-	olc::Sprite*	npcSprite;
-	olc::Sprite*	mapSprite;
-	olc::Decal*		charDecal;
-	olc::Decal*		npcDecal;
 };
 
 struct AspectRatio
