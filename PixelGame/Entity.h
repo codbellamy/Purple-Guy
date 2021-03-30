@@ -105,6 +105,7 @@ public:
 		dampen = newDampen;
 	}
 
+	// specify a different boundary
 	void updateBoundary(Boundary newBoundary) {
 		b = newBoundary;
 	}
@@ -169,7 +170,7 @@ public:
 
 		pos += vel * elapsedTime;	// Update position
 
-		this->collision();			// Check collision
+		this->collision();			// Check collision with boundary
 	}
 
 	// Invert the velocity based on which boundary it bounces on
@@ -282,6 +283,14 @@ public:
 		mapBounds = { 0, float(w), 0, float(h) };
 	}
 
+	~Player()
+	{
+		delete cam;
+	}
+
+public:
+
+	// Getters
 	Camera* getCamera() { return cam; }
 
 	// Overwrites from parent class since the player can manipulate the camera
