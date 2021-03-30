@@ -1,6 +1,7 @@
 #pragma once
 #include "../olcPixelGameEngine.h"
 #include "Camera.h"
+#include "Animation.h"
 
 class Entity {
 
@@ -41,9 +42,15 @@ public:
 	// Default constructor (used for testing)
 	Entity();
 
+	// Destructor
+	~Entity();
+
 public:
 	const float spriteSize = 16;
 	const float r = spriteSize / 2;
+
+	// Animations
+	AnimationManager* am;
 
 private:
 	// Specific behavior (limiters)
@@ -104,6 +111,9 @@ public:
 
 	// How should the movement of the entity be dictated
 	virtual void velDecay();
+
+	// Set up the animations for the entity
+	void initAnimations(std::vector<int>, int, std::string);
 };
 
 class Player : public Entity {
@@ -167,7 +177,7 @@ class NPC : public Entity {
 public:
 
 	// Init the NPC as a child of Entity
-	NPC(olc::vf2d, int32_t, int32_t, float);
+	NPC(olc::vf2d, int32_t, int32_t, float mass = 100.0f);
 
 private:
 

@@ -3,6 +3,10 @@
 #include "./PixelGame/Entity.h"
 #include "./PixelGame/Camera.h"
 
+void setLevel(int& levelSelector, int newLevel) {
+	levelSelector = newLevel;
+}
+
 class Game : public olc::PixelGameEngine
 {
 public:
@@ -19,10 +23,8 @@ public:
 
 		// Create the player and load the decal for the player
 		player = new Player(ScreenWidth(), ScreenHeight(), startingPos, 1000.0f);
-		charSprite = new olc::Sprite(charPath);
-		charDecal = new olc::Decal(charSprite);
+		player->initAnimations({ 5 }, 10, charPath);
 
-		// Load the npc decal
 		npcSprite = new olc::Sprite(npcPath);
 		npcDecal = new olc::Decal(npcSprite);
 
@@ -31,6 +33,7 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
+
 		// Get the camera offsets
 		olc::vf2d cameraOffsets = player->getCamera()->getOffsets();
 
@@ -119,7 +122,9 @@ public:
 		olc::vf2d pos = player->getPos();
 		olc::vf2d spriteSize = { player->r, player->r };
 		olc::vf2d adjust = pos - spriteSize;
-		DrawDecal(adjust, charDecal);
+		std::pair<olc::vf2d, olc::vf2d> animationData = player->am->getPartialCoords();
+		DrawPartialDecal(adjust, player->am->getDecal(), animationData.first, animationData.second);
+		//DrawDecal(adjust, player->am->getDecal());
 
 		// Reset pixel mode since drawing with alpha is computationally heavy
 		SetPixelMode(olc::Pixel::NORMAL);
@@ -151,19 +156,18 @@ private:
 	std::vector<std::unique_ptr<Entity>> entities;
 
 	// Sprite and image data
-	std::string		charPath	= "./Assets/images/sprites/Character.png";
+	std::string		charPath	= "./Assets/images/sprites/Test.png";
 	std::string		mapPath		= "./Assets/images/sprites/TestMap.png";
 	std::string		npcPath		= "./Assets/images/sprites/NPC.png";
+	
+	olc::Sprite* npcSprite;
+	olc::Decal* npcDecal;
 
 	// Look behind the curtain
 	bool debugFlag = false;
 
 	// Sprite and decal loaders
-	olc::Sprite*	charSprite;
-	olc::Sprite*	npcSprite;
 	olc::Sprite*	mapSprite;
-	olc::Decal*		charDecal;
-	olc::Decal*		npcDecal;
 };
 
 struct AspectRatio
