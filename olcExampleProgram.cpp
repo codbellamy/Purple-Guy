@@ -23,7 +23,7 @@ public:
 
 		// Create the player and load the decal for the player
 		player = new Player(ScreenWidth(), ScreenHeight(), startingPos, 1000.0f);
-		player->initAnimations({ 5 }, 10, charPath);
+		player->initAnimations({ 11, 7, 7, 7, 7 }, 8, charPath);
 
 		npcSprite = new olc::Sprite(npcPath);
 		npcDecal = new olc::Decal(npcSprite);
@@ -100,7 +100,7 @@ private:
 	std::vector<std::unique_ptr<Entity>> entities;
 
 	// Sprite and image data
-	std::string		charPath	= "./Assets/images/sprites/Test.png";
+	std::string		charPath	= "./Assets/images/sprite_sheets/slug.png";
 	std::string		mapPath		= "./Assets/images/sprites/TestMap.png";
 	std::string		npcPath		= "./Assets/images/sprites/NPC.png";
 	

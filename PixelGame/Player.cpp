@@ -51,6 +51,9 @@ void Player::updatePosition(float elapsedTime) {
 
 	// Animation
 	am->updateAnimation(elapsedTime);
+	if (this->getVel().mag2() == 0) {
+		am->selectAnimation(0);
+	}
 }
 //void Player::initAnimations(std::vector<int> animationCounts, int framesPerAnimation, std::string file){}
 
@@ -59,23 +62,24 @@ void Player::move(Move m) {
 
 	float speed = this->getSpeed();
 
-	// Use this to switch which animation to display
-	am->selectAnimation(0);
-
 	// TODO: use this to set flags on movement for animation
 	switch (m)
 	{
 	case Player::UP:
 		this->increaseVel({ 0.0f, -speed });
+		am->selectAnimation(3);
 		break;
 	case Player::DOWN:
 		this->increaseVel({ 0.0f, speed });
+		am->selectAnimation(4);
 		break;
 	case Player::LEFT:
 		this->increaseVel({ -speed, 0.0f });
+		am->selectAnimation(2);
 		break;
 	case Player::RIGHT:
 		this->increaseVel({ speed, 0.0f });
+		am->selectAnimation(1);
 		break;
 	default:
 		break;
