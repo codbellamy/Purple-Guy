@@ -53,6 +53,7 @@ void Player::updatePosition(float elapsedTime) {
 	am->updateAnimation(elapsedTime);
 	if (this->getVel().mag2() == 0) {
 		am->selectAnimation(0);
+		am->idle(200);
 	}
 }
 //void Player::initAnimations(std::vector<int> animationCounts, int framesPerAnimation, std::string file){}
@@ -62,7 +63,6 @@ void Player::move(Move m) {
 
 	float speed = this->getSpeed();
 
-	// TODO: use this to set flags on movement for animation
 	switch (m)
 	{
 	case Player::UP:
@@ -84,6 +84,9 @@ void Player::move(Move m) {
 	default:
 		break;
 	}
+
+	// Make sure that we play the animation we selected
+	am->play();
 }
 
 // Private functions
