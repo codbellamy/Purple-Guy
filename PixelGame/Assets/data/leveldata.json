@@ -1,29 +1,34 @@
 {
-    "levels": {
-        "0": {
-            "name" : "TestMap",
-            "player" : {
-                "skin" : "Character",
-                "location" : [0, 0]
+"0": {
+        "name" : "TestMap",
+        "tilesize" : 16,
+        "tiles" : [64, 36],
+        "player" : {
+            "animated" : true,
+            "skin" : "slug",
+            "location" : [0, 0]
+        },
+        "npcs" : [
+            {
+                "animated" : false,
+                "skin" : "NPC",
+                "location" : [100, 100]
             },
-            "npcs" : [
-                {
-                    "skin" : "NPC",
-                    "location" : [100, 100]
-                },
-                {
-                    "skin" : "NPC",
-                    "location" : [200, 100]
-                },
-                {
-                    "skin" : "NPC",
-                    "location" : [100, 200]
-                },
-                {
-                    "skin" : "NPC",
-                    "location" : [200, 200]
-                }
-            ]
-        }
+            {
+                "animated" : false,
+                "skin" : "NPC",
+                "location" : [200, 100]
+            },
+            {
+                "animated" : false,
+                "skin" : "NPC",
+                "location" : [100, 200]
+            },
+            {
+                "animated" : false,
+                "skin" : "NPC",
+                "location" : [200, 200]
+            }
+        ]
     }
 }

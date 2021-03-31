@@ -2,6 +2,8 @@
 #include "olcPixelGameEngine.h"
 #include "./PixelGame/Entity.h"
 #include "./PixelGame/Camera.h"
+#include "./PixelGame/json.hpp"
+#include <istream>
 
 void setLevel(int& levelSelector, int newLevel) {
 	levelSelector = newLevel;
@@ -18,13 +20,12 @@ public:
 public:
 	bool OnUserCreate() override
 	{
+		std::cout << "Initializing..." << std::endl;
+
+		this->loadLevel();
+
 		// Load the map sprite
 		mapSprite = new olc::Sprite(mapPath);
-
-		// Create the player and load the decal for the player
-		player = new Player(ScreenWidth(), ScreenHeight(), startingPos, 1000.0f);
-		player->initAnimations({ 11, 7, 7, 7, 7 }, 8, charPath);
-
 		npcSprite = new olc::Sprite(npcPath);
 		npcDecal = new olc::Decal(npcSprite);
 
@@ -91,17 +92,17 @@ private:
 
 	// Relative starting position for the player (this will adjust offsets accordingly)
 	// {0, 0} will not offset anything... (the player will spawn at the normal center)
-	const olc::vf2d startingPos = { 0, 0 };
+	olc::vf2d startingPos;
 
 	// Player
-	Player* player;
+	std::unique_ptr<Player> player;
 
 	// Vector to hold all aditional entities
 	std::vector<std::unique_ptr<Entity>> entities;
 
 	// Sprite and image data
-	std::string		charPath	= "./Assets/images/sprite_sheets/slug.png";
-	std::string		mapPath		= "./Assets/images/sprites/TestMap.png";
+	std::string		charPath;
+	std::string		mapPath;
 	std::string		npcPath		= "./Assets/images/sprites/NPC.png";
 	
 	olc::Sprite* npcSprite;
@@ -114,6 +115,37 @@ private:
 	olc::Sprite*	mapSprite;
 
 private:
+
+	void loadLevel(int level=0) {
+		using json = nlohmann::json;
+
+		// Read level data
+		std::ifstream i("./Assets/data/leveldata.json");
+		json j;
+		i >> j;
+		j = j[std::to_string(level)];
+		//std::cout << j[std::to_string(level)]["name"].get<std::string>() << std::endl;
+
+		// Load map
+		mapPath = "./Assets/images/sprites/" 
+			+ j["name"].get<std::string>() 
+			+ ".png";
+
+		// Load player and set initial position
+		startingPos = olc::vf2d({ j["player"]["location"][0].get<float>(), j["player"]["location"][1].get<float>() });
+		player = std::make_unique<Player>(ScreenWidth(), ScreenHeight(), startingPos, 1000.0f);
+		
+		// Load sprite for player
+		std::string path;
+		if (j["player"]["animated"].get<bool>()) {
+			path = "./Assets/images/sprite_sheets/";
+		}
+		else {
+			path = "./Assets/images/sprites/";
+		}
+		charPath = path + j["player"]["skin"].get<std::string>() + ".png";
+		player->initAnimations({ 11, 7, 7, 7, 7 }, 8, charPath);
+	}
 
 	void drawPlayer(){
 		// Get and adjust the position for the sprite
