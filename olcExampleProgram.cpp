@@ -2,6 +2,8 @@
 #include "olcPixelGameEngine.h"
 #include "./PixelGame/Entity.h"
 #include "./PixelGame/Camera.h"
+#include "./PixelGame/json.hpp"
+#include <istream>
 
 void setLevel(int& levelSelector, int newLevel) {
 	levelSelector = newLevel;
@@ -18,15 +20,12 @@ public:
 public:
 	bool OnUserCreate() override
 	{
+		std::cout << "Initializing..." << std::endl;
+
+		this->loadLevel();
+
 		// Load the map sprite
 		mapSprite = new olc::Sprite(mapPath);
-
-		// Create the player and load the decal for the player
-		player = new Player(ScreenWidth(), ScreenHeight(), startingPos, 1000.0f);
-		player->initAnimations({ 5 }, 10, charPath);
-
-		npcSprite = new olc::Sprite(npcPath);
-		npcDecal = new olc::Decal(npcSprite);
 
 		return true;
 	}
@@ -37,11 +36,6 @@ public:
 		// Get the camera offsets
 		cameraOffsets = player->getCamera()->getOffsets();
 
-		// Get mouse position for creating new npcs (on click)
-		olc::vf2d mouse = { float(GetMouseX()), float(GetMouseY()) };
-		mouse -= cameraOffsets;
-
-
 		// Clear previous frame
 		Clear(olc::BLACK);
 
@@ -51,12 +45,6 @@ public:
 		if (GetKey(olc::Key::S).bHeld)			player->move(Player::Move::DOWN);
 		if (GetKey(olc::Key::A).bHeld)			player->move(Player::Move::LEFT);
 		if (GetKey(olc::Key::D).bHeld)			player->move(Player::Move::RIGHT);
-
-		// Adding NPCs on click
-		if (GetMouse(0).bPressed)
-			entities.push_back(std::make_unique<NPC>(mouse, ScreenWidth(), ScreenHeight()));
-		if (GetMouse(1).bHeld)
-			entities.push_back(std::make_unique<NPC>(mouse, ScreenWidth(), ScreenHeight()));
 
 		// Debug and exit
 		if (GetKey(olc::Key::F5).bPressed)		debugFlag = !debugFlag;
@@ -91,21 +79,17 @@ private:
 
 	// Relative starting position for the player (this will adjust offsets accordingly)
 	// {0, 0} will not offset anything... (the player will spawn at the normal center)
-	const olc::vf2d startingPos = { 0, 0 };
+	olc::vf2d startingPos;
 
 	// Player
-	Player* player;
+	std::unique_ptr<Player> player;
 
 	// Vector to hold all aditional entities
 	std::vector<std::unique_ptr<Entity>> entities;
 
 	// Sprite and image data
-	std::string		charPath	= "./Assets/images/sprites/Test.png";
-	std::string		mapPath		= "./Assets/images/sprites/TestMap.png";
-	std::string		npcPath		= "./Assets/images/sprites/NPC.png";
-	
-	olc::Sprite* npcSprite;
-	olc::Decal* npcDecal;
+	std::string		charPath;
+	std::string		mapPath;
 
 	// Look behind the curtain
 	bool debugFlag = false;
@@ -114,6 +98,63 @@ private:
 	olc::Sprite*	mapSprite;
 
 private:
+
+	void loadLevel(int level=0) {
+		using json = nlohmann::json;
+
+		// Read level data
+		std::ifstream i("./Assets/data/leveldata.json");
+		json j;
+		i >> j;
+		j = j[std::to_string(level)];
+		//std::cout << j[std::to_string(level)]["name"].get<std::string>() << std::endl;
+
+		// Load map
+		mapPath = "./Assets/images/sprites/" 
+			+ j["name"].get<std::string>() 
+			+ ".png";
+
+		// Load player and set initial position
+		startingPos = olc::vf2d({ j["player"]["location"][0].get<float>(), j["player"]["location"][1].get<float>() });
+		player = std::make_unique<Player>(ScreenWidth(), ScreenHeight(), startingPos, 1000.0f);
+		
+		// Load player sprite
+		std::string path;
+		if (j["player"]["animated"].get<bool>()) {
+			path = "./Assets/images/sprite_sheets/";
+		}
+		else {
+			path = "./Assets/images/sprites/";
+		}
+		charPath = path + j["player"]["skin"].get<std::string>() + ".png";
+		player->initAnimations({ 11, 7, 7, 7, 7 }, 8, charPath);
+
+		// Load NPCs
+		olc::vf2d ePos;
+		for (auto& npc : j["npcs"]) {
+
+			// Check if the entity is animated
+			if (npc["animated"].get<bool>()) {
+				path = "./Assets/images/sprite_sheets/";
+			}
+			else {
+				path = "./Assets/images/sprites/";
+			}
+
+			// Skin for npc
+			path += npc["skin"].get<std::string>() + ".png";
+
+			// Location
+			ePos = {npc["location"][0].get<float>(), npc["location"][1].get<float>()};
+
+			// Init the NPC and assign decal from the path
+			std::unique_ptr<NPC> newNPC = std::make_unique<NPC>(ePos, ScreenWidth(), ScreenHeight());
+			newNPC->setDecal(path); 
+
+			// Add entity to the vector
+			entities.push_back(std::move(newNPC));
+		}
+	}
 
 	void drawPlayer(){
 		// Get and adjust the position for the sprite
@@ -169,7 +210,7 @@ private:
 
 
 				// Draw the NPC with the npcDecal
-				DrawDecal(pos - spriteAdjust + cameraOffsets, npcDecal);
+				DrawDecal(pos - spriteAdjust + cameraOffsets, e->getDecal());
 
 				// Debug visuals (boundaries and entity radius)
 				if (debugFlag) {

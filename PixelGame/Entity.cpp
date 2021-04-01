@@ -31,8 +31,10 @@ Entity::Entity()
 // Destructor
 Entity::~Entity()
 {
-	// Release memory for the animation manager
+	// Release memory
 	delete am;
+	delete sprite;
+	delete decal;
 }
 
 // Getters
@@ -42,6 +44,7 @@ float Entity::getSpeed() { return speed; }
 olc::vf2d Entity::getPos() { return pos; }
 olc::vf2d Entity::getVel() { return vel; }
 float Entity::getMass() { return m; }
+olc::Decal* Entity::getDecal() { return decal; };
 
 // Setters
 void Entity::setSpeed(float newSpeed) { speed = newSpeed; }
@@ -52,6 +55,10 @@ void Entity::setMass(float newMass) { m = newMass; }
 void Entity::increasePos(olc::vf2d deltaPos) { pos += deltaPos; }
 void Entity::increaseVel(olc::vf2d deltaVel) { vel += deltaVel; }
 void Entity::updateBoundary(Boundary newBoundary) { b = newBoundary; }
+void Entity::setDecal(std::string file) {
+	sprite = new olc::Sprite(file);
+	decal = new olc::Decal(sprite);
+}
 void Entity::setPhysics(float newSpeedCap, float newSpeed, float newDampen) {
 	speedCap = newSpeedCap;
 	speed = newSpeed;

@@ -30,7 +30,11 @@ private:
 
 	// Current status
 	int currentFrame = 0;		// [0, nFrames-1]
-	int currentAnimation = 0;	// [0, numberOfAnimations.size()]
+	int currentAnimation = 0;	// [0, numberOfAnimations.size()-1]
+	bool isPlaying = false;
+	bool isIdle = false;
+	int alpha = 1;
+	int accumulatedFrames = 0;
 	
 	// Accumulated total time
 	float accumulatedTime = 0.0f;
@@ -40,19 +44,50 @@ private:
 	olc::Decal* decal;
 
 public:
+
+	// 1/alpha probability that animation-0 will play
+	void idle(int alpha) { 
+		if (isIdle) return;
+		isPlaying = false;
+		isIdle = true;
+		this->alpha = alpha;
+	}
+	void play() { 
+		if (isPlaying) return;
+		isPlaying = true; 
+		isIdle = false;
+	}
 	
 	// Update the current frame number
 	void updateAnimation(float elapsedTime) {
 		
 		accumulatedTime += elapsedTime;
+
 		if (accumulatedTime >= target) {
 			accumulatedTime = fmod(accumulatedTime, target);
-			currentFrame++;
-			currentFrame %= animations[currentAnimation];
+
+			if (isPlaying || accumulatedFrames > 0) {
+
+				if (isPlaying) {
+					currentFrame++;
+					currentFrame %= animations[currentAnimation];
+				}
+				else {
+					currentFrame = animations[currentAnimation] - accumulatedFrames;
+					accumulatedFrames--;
+				}
+			}
+			else {
+				currentFrame = 0;
+			}
+
+			if (isIdle && (rand() % alpha == 0) && accumulatedFrames <= 0) {
+				accumulatedFrames = animations[0];
+			}
 		}
 	}
 
-	// Choose which animation frame to return
+	// Choose which animation to play
 	void selectAnimation(int animationIndex) {
 
 		if (animationIndex != currentAnimation) {

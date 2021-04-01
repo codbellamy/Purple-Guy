@@ -70,6 +70,9 @@ private:
 	// Identifiers and flags
 	Type type;
 
+	olc::Sprite* sprite;
+	olc::Decal* decal;
+
 public:
 	// Getters
 	Boundary getBoundary();
@@ -78,6 +81,7 @@ public:
 	olc::vf2d getPos();
 	olc::vf2d getVel();
 	float getMass();
+	olc::Decal* getDecal();
 
 	// Setters
 	void setSpeed(float);
@@ -87,6 +91,7 @@ public:
 	void setMass(float);
 	void increasePos(olc::vf2d);
 	void increaseVel(olc::vf2d);
+	void setDecal(std::string);
 
 	// Change movement characteristics in one go
 	void setPhysics(float, float, float);
