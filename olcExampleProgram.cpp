@@ -26,8 +26,6 @@ public:
 
 		// Load the map sprite
 		mapSprite = new olc::Sprite(mapPath);
-		npcSprite = new olc::Sprite(npcPath);
-		npcDecal = new olc::Decal(npcSprite);
 
 		return true;
 	}
@@ -38,11 +36,6 @@ public:
 		// Get the camera offsets
 		cameraOffsets = player->getCamera()->getOffsets();
 
-		// Get mouse position for creating new npcs (on click)
-		olc::vf2d mouse = { float(GetMouseX()), float(GetMouseY()) };
-		mouse -= cameraOffsets;
-
-
 		// Clear previous frame
 		Clear(olc::BLACK);
 
@@ -52,12 +45,6 @@ public:
 		if (GetKey(olc::Key::S).bHeld)			player->move(Player::Move::DOWN);
 		if (GetKey(olc::Key::A).bHeld)			player->move(Player::Move::LEFT);
 		if (GetKey(olc::Key::D).bHeld)			player->move(Player::Move::RIGHT);
-
-		// Adding NPCs on click
-		if (GetMouse(0).bPressed)
-			entities.push_back(std::make_unique<NPC>(mouse, ScreenWidth(), ScreenHeight()));
-		if (GetMouse(1).bHeld)
-			entities.push_back(std::make_unique<NPC>(mouse, ScreenWidth(), ScreenHeight()));
 
 		// Debug and exit
 		if (GetKey(olc::Key::F5).bPressed)		debugFlag = !debugFlag;
@@ -103,10 +90,6 @@ private:
 	// Sprite and image data
 	std::string		charPath;
 	std::string		mapPath;
-	std::string		npcPath		= "./Assets/images/sprites/NPC.png";
-	
-	olc::Sprite* npcSprite;
-	olc::Decal* npcDecal;
 
 	// Look behind the curtain
 	bool debugFlag = false;
@@ -135,7 +118,7 @@ private:
 		startingPos = olc::vf2d({ j["player"]["location"][0].get<float>(), j["player"]["location"][1].get<float>() });
 		player = std::make_unique<Player>(ScreenWidth(), ScreenHeight(), startingPos, 1000.0f);
 		
-		// Load sprite for player
+		// Load player sprite
 		std::string path;
 		if (j["player"]["animated"].get<bool>()) {
 			path = "./Assets/images/sprite_sheets/";
@@ -145,6 +128,32 @@ private:
 		}
 		charPath = path + j["player"]["skin"].get<std::string>() + ".png";
 		player->initAnimations({ 11, 7, 7, 7, 7 }, 8, charPath);
+
+		// Load NPCs
+		olc::vf2d ePos;
+		for (auto& npc : j["npcs"]) {
+
+			// Check if the entity is animated
+			if (npc["animated"].get<bool>()) {
+				path = "./Assets/images/sprite_sheets/";
+			}
+			else {
+				path = "./Assets/images/sprites/";
+			}
+
+			// Skin for npc
+			path += npc["skin"].get<std::string>() + ".png";
+
+			// Location
+			ePos = {npc["location"][0].get<float>(), npc["location"][1].get<float>()};
+
+			// Init the NPC and assign decal from the path
+			std::unique_ptr<NPC> newNPC = std::make_unique<NPC>(ePos, ScreenWidth(), ScreenHeight());
+			newNPC->setDecal(path); 
+
+			// Add entity to the vector
+			entities.push_back(std::move(newNPC));
+		}
 	}
 
 	void drawPlayer(){
@@ -201,7 +210,7 @@ private:
 
 
 				// Draw the NPC with the npcDecal
-				DrawDecal(pos - spriteAdjust + cameraOffsets, npcDecal);
+				DrawDecal(pos - spriteAdjust + cameraOffsets, e->getDecal());
 
 				// Debug visuals (boundaries and entity radius)
 				if (debugFlag) {
