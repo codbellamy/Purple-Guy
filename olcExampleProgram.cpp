@@ -23,9 +23,6 @@ public:
 
 		this->loadLevel();
 
-		// Load the map sprite
-		mapSprite = new olc::Sprite(mapPath, pack);
-
 		return true;
 	}
 
@@ -88,14 +85,12 @@ private:
 	std::vector<std::unique_ptr<Entity>> entities;
 
 	// Sprite and image data
-	std::string		charPath;
-	std::string		mapPath;
+	olc::Sprite* mapSprite;
 
 	// Look behind the curtain
 	bool debugFlag = false;
 
 	// Sprite and decal loaders
-	olc::Sprite*	mapSprite;
 
 	// Resources
 	olc::ResourcePack* pack = new olc::ResourcePack();
@@ -103,12 +98,16 @@ private:
 private:
 
 	void loadLevel(int level=0) {
+		// Quick cleanup
+		delete mapSprite;
+
 		using json = nlohmann::json;
 
 		// Load the appropriate resource pack for the level
 		pack->LoadPack("./Assets/data/" + std::to_string(level) + ".dat", resourcePass);
+
+		// Load level data into input stream from buffer
 		olc::ResourceBuffer rb = pack->GetFileBuffer("./Assets/data/leveldata.json");
-		
 		std::istream i(&rb);
 		
 		// Read level data
@@ -116,13 +115,16 @@ private:
 		i >> j;
 		j = j[std::to_string(level)];
 
-		// Load map
-		mapPath = "./Assets/images/sprites/" 
-			+ j["name"].get<std::string>() 
-			+ ".png";
+		// Load the map sprite
+		mapSprite = new olc::Sprite
+			("./Assets/images/sprites/" + j["name"].get<std::string>() + ".png", pack);
 
 		// Load player and set initial position
-		startingPos = olc::vf2d({ j["player"]["location"][0].get<float>(), j["player"]["location"][1].get<float>() });
+		startingPos = olc::vf2d(
+			{ 
+				j["player"]["location"][0].get<float>(),
+				j["player"]["location"][1].get<float>()
+			});
 		player = std::make_unique<Player>(ScreenWidth(), ScreenHeight(), startingPos, 1000.0f);
 		
 		// Load player sprite
@@ -133,8 +135,7 @@ private:
 		else {
 			path = "./Assets/images/sprites/";
 		}
-		charPath = path + j["player"]["skin"].get<std::string>() + ".png";
-		player->setDecal(path, pack);
+		player->setDecal(path + j["player"]["skin"].get<std::string>() + ".png", pack);
 		player->initAnimations({ 11, 7, 7, 7, 7 }, 8);
 
 		// Load NPCs
