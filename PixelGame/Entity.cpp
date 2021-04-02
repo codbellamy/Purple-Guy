@@ -55,8 +55,8 @@ void Entity::setMass(float newMass) { m = newMass; }
 void Entity::increasePos(olc::vf2d deltaPos) { pos += deltaPos; }
 void Entity::increaseVel(olc::vf2d deltaVel) { vel += deltaVel; }
 void Entity::updateBoundary(Boundary newBoundary) { b = newBoundary; }
-void Entity::setDecal(std::string file) {
-	sprite = new olc::Sprite(file);
+void Entity::setDecal(std::string file, olc::ResourcePack* pack) {
+	sprite = new olc::Sprite(file, pack);
 	decal = new olc::Decal(sprite);
 }
 void Entity::setPhysics(float newSpeedCap, float newSpeed, float newDampen) {
@@ -128,9 +128,9 @@ void Entity::bounce(int a) {
 		break;
 	}
 }
-void Entity::initAnimations(std::vector<int> animationCounts, int framesPerAnimation, std::string file)
+void Entity::initAnimations(std::vector<int> animationCounts, int framesPerAnimation)
 {
-	am = new AnimationManager(animationCounts, framesPerAnimation, file);
+	am = new AnimationManager(animationCounts, framesPerAnimation, decal);
 }
 
 // Virtual functions that will likely need to be overwritten for child classes

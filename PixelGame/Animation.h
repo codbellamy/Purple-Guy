@@ -6,18 +6,15 @@
 
 class AnimationManager {
 public:
-	AnimationManager(std::vector<int> animationCounts, int framesPerAnimation, std::string file)
-		: animations(animationCounts)
+	AnimationManager(std::vector<int> animationCounts, int framesPerAnimation, olc::Decal* d)
+		: animations(animationCounts), decal(d)
 	{
 		target = float(framesPerAnimation) / 60;
 		numberOfAnimations = animationCounts.size();
-		original = new olc::Sprite(file);
-		decal = new olc::Decal(original);
 	}
 
 	~AnimationManager()
 	{
-		delete original;
 		delete decal;
 	}
 
@@ -40,7 +37,6 @@ private:
 	float accumulatedTime = 0.0f;
 
 	// Sprite and decal
-	olc::Sprite* original;
 	olc::Decal* decal;
 
 public:

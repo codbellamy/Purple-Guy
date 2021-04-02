@@ -36,10 +36,14 @@
 Extensions/
 Pyxel Originals/
 .vscode/
+.vs/
 PixelGame/Debug/
 PixelGame/Release/
 PixelGame/x64/
 PixelGame/.vs/
+PixelGame/Assets/temp/
+#PixelGame/Assets/images/
+#PixelGame/Assets/data/leveldata.json
 
 # VS2019 Files
 PixelGame/*vcxproj*

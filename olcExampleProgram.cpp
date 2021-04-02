@@ -5,10 +5,6 @@
 #include "./PixelGame/json.hpp"
 #include <istream>
 
-void setLevel(int& levelSelector, int newLevel) {
-	levelSelector = newLevel;
-}
-
 class Game : public olc::PixelGameEngine
 {
 public:
@@ -22,10 +18,13 @@ public:
 	{
 		std::cout << "Initializing..." << std::endl;
 
+		//pack->AddFile("./Assets/data/leveldata.json");
+		//pack->SavePack("./Assets/data/0.dat", resourcePass);
+
 		this->loadLevel();
 
 		// Load the map sprite
-		mapSprite = new olc::Sprite(mapPath);
+		mapSprite = new olc::Sprite(mapPath, pack);
 
 		return true;
 	}
@@ -74,6 +73,7 @@ private:
 	// Constants
 	const float spriteSize = 16.0f;
 	const olc::vf2d spriteAdjust = { float(spriteSize) / 2, float(spriteSize) / 2 };
+	const std::string resourcePass = "";
 
 	olc::vf2d cameraOffsets;
 
@@ -97,17 +97,24 @@ private:
 	// Sprite and decal loaders
 	olc::Sprite*	mapSprite;
 
+	// Resources
+	olc::ResourcePack* pack = new olc::ResourcePack();
+
 private:
 
 	void loadLevel(int level=0) {
 		using json = nlohmann::json;
 
+		// Load the appropriate resource pack for the level
+		pack->LoadPack("./Assets/data/" + std::to_string(level) + ".dat", resourcePass);
+		olc::ResourceBuffer rb = pack->GetFileBuffer("./Assets/data/leveldata.json");
+		
+		std::istream i(&rb);
+		
 		// Read level data
-		std::ifstream i("./Assets/data/leveldata.json");
 		json j;
 		i >> j;
 		j = j[std::to_string(level)];
-		//std::cout << j[std::to_string(level)]["name"].get<std::string>() << std::endl;
 
 		// Load map
 		mapPath = "./Assets/images/sprites/" 
@@ -127,7 +134,8 @@ private:
 			path = "./Assets/images/sprites/";
 		}
 		charPath = path + j["player"]["skin"].get<std::string>() + ".png";
-		player->initAnimations({ 11, 7, 7, 7, 7 }, 8, charPath);
+		player->setDecal(path, pack);
+		player->initAnimations({ 11, 7, 7, 7, 7 }, 8);
 
 		// Load NPCs
 		olc::vf2d ePos;
@@ -149,7 +157,7 @@ private:
 
 			// Init the NPC and assign decal from the path
 			std::unique_ptr<NPC> newNPC = std::make_unique<NPC>(ePos, ScreenWidth(), ScreenHeight());
-			newNPC->setDecal(path); 
+			newNPC->setDecal(path, pack); 
 
 			// Add entity to the vector
 			entities.push_back(std::move(newNPC));
