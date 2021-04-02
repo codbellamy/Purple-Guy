@@ -91,7 +91,7 @@ public:
 	void setMass(float);
 	void increasePos(olc::vf2d);
 	void increaseVel(olc::vf2d);
-	void setDecal(std::string);
+	void setDecal(std::string, olc::ResourcePack*);
 
 	// Change movement characteristics in one go
 	void setPhysics(float, float, float);
@@ -118,7 +118,7 @@ public:
 	virtual void velDecay();
 
 	// Set up the animations for the entity
-	void initAnimations(std::vector<int>, int, std::string);
+	void initAnimations(std::vector<int>, int);
 };
 
 class Player : public Entity {
