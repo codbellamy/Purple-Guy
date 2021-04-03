@@ -44,6 +44,7 @@ PixelGame/.vs/
 PixelGame/Assets/temp/
 PixelGame/Assets/images/
 PixelGame/Assets/data/leveldata.json
+PixelGame/pass.txt
 
 # VS2019 Files
 PixelGame/*vcxproj*

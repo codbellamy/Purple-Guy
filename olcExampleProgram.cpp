@@ -70,7 +70,9 @@ private:
 	// Constants
 	const float spriteSize = 16.0f;
 	const olc::vf2d spriteAdjust = { float(spriteSize) / 2, float(spriteSize) / 2 };
-	const std::string resourcePass = "";
+
+	// Password for decrypting resource packs
+	std::string resourcePass;
 
 	olc::vf2d cameraOffsets;
 
@@ -102,6 +104,9 @@ private:
 		delete mapSprite;
 
 		using json = nlohmann::json;
+
+		std::ifstream pass("./pass.txt");
+		std::getline(pass, resourcePass);
 
 		// Load the appropriate resource pack for the level
 		pack->LoadPack("./Assets/data/" + std::to_string(level) + ".dat", resourcePass);
