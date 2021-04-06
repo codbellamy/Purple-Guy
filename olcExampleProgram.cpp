@@ -70,7 +70,9 @@ private:
 	// Constants
 	const float spriteSize = 16.0f;
 	const olc::vf2d spriteAdjust = { float(spriteSize) / 2, float(spriteSize) / 2 };
-	const std::string resourcePass = "";
+
+	// Password for decrypting resource packs
+	std::string resourcePass;
 
 	olc::vf2d cameraOffsets;
 
@@ -98,10 +100,14 @@ private:
 private:
 
 	void loadLevel(int level=0) {
-		// Quick cleanup
+		// Quick cleanup from any previous levels that have been loaded
 		delete mapSprite;
 
 		using json = nlohmann::json;
+
+		// Read the password in to decrypt the resource pack
+		std::ifstream pass("./pass.txt");
+		std::getline(pass, resourcePass);
 
 		// Load the appropriate resource pack for the level
 		pack->LoadPack("./Assets/data/" + std::to_string(level) + ".dat", resourcePass);
@@ -127,7 +133,7 @@ private:
 			});
 		player = std::make_unique<Player>(ScreenWidth(), ScreenHeight(), startingPos, 1000.0f);
 		
-		// Load player sprite
+		// Determine if the decal is going to be animated
 		std::string path;
 		if (j["player"]["animated"].get<bool>()) {
 			path = "./Assets/images/sprite_sheets/";
@@ -135,6 +141,8 @@ private:
 		else {
 			path = "./Assets/images/sprites/";
 		}
+
+		// Set the player decal
 		player->setDecal(path + j["player"]["skin"].get<std::string>() + ".png", pack);
 		player->initAnimations({ 11, 7, 7, 7, 7 }, 8);
 
