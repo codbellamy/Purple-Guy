@@ -23,6 +23,8 @@ public:
 		//pack->AddFile("./Assets/data/leveldata.json");
 		//pack->SavePack("./Assets/data/0.dat", resourcePass);
 
+		std::cout << "Loaded Assets" << std::endl;
+
 		return true;
 	}
 

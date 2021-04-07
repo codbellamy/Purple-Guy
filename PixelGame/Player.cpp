@@ -65,19 +65,19 @@ void Player::move(Move m) {
 
 	switch (m)
 	{
-	case Player::UP:
+	case Move::UP:
 		this->increaseVel({ 0.0f, -speed });
 		am->selectAnimation(3);
 		break;
-	case Player::DOWN:
+	case Move::DOWN:
 		this->increaseVel({ 0.0f, speed });
 		am->selectAnimation(4);
 		break;
-	case Player::LEFT:
+	case Move::LEFT:
 		this->increaseVel({ -speed, 0.0f });
 		am->selectAnimation(2);
 		break;
-	case Player::RIGHT:
+	case Move::RIGHT:
 		this->increaseVel({ speed, 0.0f });
 		am->selectAnimation(1);
 		break;

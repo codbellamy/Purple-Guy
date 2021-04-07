@@ -126,7 +126,7 @@ class Player : public Entity {
 
 public:
 
-	enum Move {
+	enum class Move {
 		UP,
 		DOWN,
 		LEFT,
