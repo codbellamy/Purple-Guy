@@ -7,14 +7,19 @@ Entity::Entity(olc::vf2d iPos, olc::vf2d iVel, Boundary b, float mass, Type t)
 	b(b),
 	m(mass),
 	type(t)
-{ }
+{
+	dampen = 1;
+	speed = 1.0f;
+	speedCap = 1.0f;
+
+	decal = nullptr;
+	sprite = nullptr;
+	am = nullptr;
+}
 
 // Unknown boundaries (at the moment)
 Entity::Entity(olc::vf2d iPos, olc::vf2d iVel, float mass, Type t)
-	: pos(iPos),
-	vel(iVel),
-	m(mass),
-	type(t)
+	: Entity(iPos, iVel, { 0,0,100,100 }, mass, t)
 { }
 
 // Default constructor (used for testing)
@@ -22,7 +27,7 @@ Entity::Entity()
 	: pos({ 50.0f, 50.0f }),
 	vel({ 0.0f, 0.0f }),
 	b({ 0, 100, 0, 100 }),
-	m(100.0f), type(NONE)
+	m(100.0f), type(Type::NONE)
 
 {
 	this->setPhysics(100.0f, 50.0f, 0.05f);
@@ -39,6 +44,22 @@ Entity::~Entity()
 
 // Getters
 Entity::Boundary Entity::getBoundary() { return b; }
+int Entity::getIntType()
+{
+	switch (type)
+	{
+	case Entity::Type::NONE:
+		return 0;
+		break;
+	case Entity::Type::PLAYER:
+		return 1;
+		break;
+	case Entity::Type::NPC:
+		return 2;
+	default:
+		break;
+	}
+}
 Entity::Type Entity::getType() { return type; }
 float Entity::getSpeed() { return speed; }
 olc::vf2d Entity::getPos() { return pos; }
@@ -71,7 +92,7 @@ void Entity::elasticCollision(std::unique_ptr<Entity>& e, olc::vf2d offsets) {
 	olc::vf2d posA, posB;
 
 	// Remove offset from entity to determine if there is a collision
-	if (this->getType() == PLAYER) {
+	if (this->getType() == Type::PLAYER) {
 		posA = pos;
 		posB = e->pos + offsets;
 	}
@@ -98,7 +119,7 @@ void Entity::elasticCollision(std::unique_ptr<Entity>& e, olc::vf2d offsets) {
 		e->vel = result2;
 
 		// Player collisions have an offset that needs to be addressed
-		if (this->getType() == PLAYER) {
+		if (this->getType() == Type::PLAYER) {
 			// Calculate player with offsets since the entities are offset
 			pos = posB + ((posA - posB).norm() * (r + e->r));
 

@@ -18,17 +18,16 @@ public:
 	{
 		std::cout << "Initializing..." << std::endl;
 
+		this->loadLevel();
+
 		//pack->AddFile("./Assets/data/leveldata.json");
 		//pack->SavePack("./Assets/data/0.dat", resourcePass);
-
-		this->loadLevel();
 
 		return true;
 	}
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
-
 		// Get the camera offsets
 		cameraOffsets = player->getCamera()->getOffsets();
 
@@ -46,23 +45,14 @@ public:
 		if (GetKey(olc::Key::F5).bPressed)		debugFlag = !debugFlag;
 		if (GetKey(olc::ESCAPE).bHeld)			exit(0);
 
-		// Update position
-		player->updatePosition(fElapsedTime);
-
 		// Draw map to the screen
 		DrawSprite(cameraOffsets, mapSprite);
-
-		// Update NPC positions and render
-		SetPixelMode(olc::Pixel::ALPHA);
 
 		// Update and render entities
 		this->updateEntities(fElapsedTime);
 
 		// Draw Player
-		this->drawPlayer();
-
-		// Reset pixel mode since drawing with alpha is computationally heavy
-		SetPixelMode(olc::Pixel::NORMAL);
+		this->updatePlayer(fElapsedTime);
 	}
 
 private:
@@ -84,7 +74,7 @@ private:
 	std::unique_ptr<Player> player;
 
 	// Vector to hold all aditional entities
-	std::vector<std::unique_ptr<Entity>> entities;
+	std::list<std::unique_ptr<Entity>> entities;
 
 	// Sprite and image data
 	olc::Sprite* mapSprite;
@@ -92,16 +82,13 @@ private:
 	// Look behind the curtain
 	bool debugFlag = false;
 
-	// Sprite and decal loaders
-
 	// Resources
 	olc::ResourcePack* pack = new olc::ResourcePack();
 
 private:
 
+	// Loads any level from the data in the leveldata.json file
 	void loadLevel(int level=0) {
-		// Quick cleanup from any previous levels that have been loaded
-		delete mapSprite;
 
 		using json = nlohmann::json;
 
@@ -148,7 +135,7 @@ private:
 
 		// Load NPCs
 		olc::vf2d ePos;
-		for (auto& npc : j["npcs"]) {
+		for (json npc : j["npcs"]) {
 
 			// Check if the entity is animated
 			if (npc["animated"].get<bool>()) {
@@ -173,7 +160,12 @@ private:
 		}
 	}
 
-	void drawPlayer(){
+	// Updates player physics and draws the decal to the screen
+	void updatePlayer(float fElapsedTime){
+
+		// Update position
+		player->updatePosition(fElapsedTime);
+
 		// Get and adjust the position for the sprite
 		olc::vf2d pos = player->getPos();
 		olc::vf2d spriteSize = { player->r, player->r };
@@ -183,7 +175,9 @@ private:
 		std::pair<olc::vf2d, olc::vf2d> animationData = player->am->getPartialCoords();
 
 		// Render the animation from the sprite sheet
+		SetPixelMode(olc::Pixel::ALPHA);
 		DrawPartialDecal(adjust, player->am->getDecal(), animationData.first, animationData.second);
+		SetPixelMode(olc::Pixel::NORMAL);
 
 		// Debug information (camera, player hitbox, bounds, etc.)
 		if (debugFlag) {
@@ -194,6 +188,7 @@ private:
 		}
 	}
 
+	// Updated entities that are loaded into the list of entities
 	void updateEntities(float fElapsedTime) {
 
 		for (auto& e : entities) {
@@ -225,9 +220,10 @@ private:
 
 			case Entity::Type::NPC:
 
-
 				// Draw the NPC with the npcDecal
+				SetPixelMode(olc::Pixel::ALPHA);
 				DrawDecal(pos - spriteAdjust + cameraOffsets, e->getDecal());
+				SetPixelMode(olc::Pixel::NORMAL);
 
 				// Debug visuals (boundaries and entity radius)
 				if (debugFlag) {
@@ -239,7 +235,7 @@ private:
 
 			default:
 				// Whoops
-				std::cout << "No Entity::Type handler for type:" << e->getType() << std::endl;
+				std::cout << "No Entity::Type handler for type:" << e->getIntType() << std::endl;
 				break;
 			}
 		}
@@ -247,6 +243,7 @@ private:
 
 };
 
+// Just for readability when initializing the game object
 struct AspectRatio
 {
 	int x;

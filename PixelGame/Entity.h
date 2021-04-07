@@ -14,7 +14,7 @@ public:
 
 	// Used to identify what the entity is
 	// New entities should be added to the end
-	enum Type {
+	enum class Type {
 		NONE,
 		PLAYER,
 		NPC
@@ -76,6 +76,7 @@ private:
 public:
 	// Getters
 	Boundary getBoundary();
+	int getIntType();
 	Type getType();
 	float getSpeed();
 	olc::vf2d getPos();
