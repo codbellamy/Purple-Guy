@@ -164,7 +164,7 @@ public:
 	Camera* getCamera();
 
 	// Overwrites from parent class since the player can manipulate the camera
-	void updatePosition(float);
+	void updatePosition(float) override;
 
 	// The player is attempting to move the player in a cardinal direction
 	void move(Move);
@@ -194,7 +194,7 @@ private:
 	const int maxDist = 30;			// maximum distance that the npc can decide to move
 
 public:
-	void updatePosition(float);
+	void updatePosition(float) override;
 
 private:
 
